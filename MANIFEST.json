@@ -1,0 +1,30 @@
+{
+  "targetRepository": "raiarslan1744/Pharmacy-backend",
+  "apiVersion": 4,
+  "sha256": {
+    ".env.example": "0bbf96c4e2e9c3269220144b019da9286c0232b17cebee184e654e40abc28444",
+    "DEPLOY.md": "cd63a8f49a598170e703d32ad0482b3c7c046db1847ef8ea5b459bc85d87787e",
+    "README.md": "ab69d5701f70196b6b47399a584e1cab32a059340d409db4560b2e8c42706f15",
+    "bootstrap.mjs": "7039a43c002a615fb35e47161e68d66c085da1154df1e354e1665b56716d3ef6",
+    "bootstrap.test.mjs": "699143d3fdb71ac36be2f3e2f9110d2a3861d530d666893027233df845fd79d6",
+    "cloud-flow.test.mjs": "d58fa5b24eef039f9991adac3dea91b178cc35a8a325bbbcd3f7f2f893abcf5a",
+    "management.test.mjs": "c80140504dc21cbbc58ef5ef1a6e1b2e829a8198c1d4b033734f4cef8b4f1573",
+    "package-lock.json": "af304ca70ccadce521f3f2f867f39b676bd1ba6aea712c77224415ce4dc0c00d",
+    "package.json": "0cc2d124ff59d1a2bc767f718215a6cc78d87a0e5f1ab352c3bed2c80273b01b",
+    "password.mjs": "a85241e75437f198099d81ac82370e7f31cedd856a955bd590affb0a682c04eb",
+    "provision.mjs": "6cf17a29b06b65b95fef5e8fcc6f2f6ddafa748ff01ec0cdf32fc91ab08ab328",
+    "render.yaml": "32d4033a6b0b1fd51378d18ba749353aa2dfaad2272d349b11c970814b275d0a",
+    "server.mjs": "3fc6d303497faa15d9fac49007eca75c2454a055fe4a754ecf96f618969fcc02",
+    "server.test.mjs": "9753f15a80fd3ec4fab462edfa6a7636264f7f12d3e2c7b5c55832cd88c0672e",
+    "session.mjs": "d66afa419b681dd8cfb733ab6994cb6405e1ab294697c3027ed6f275ea52d719",
+    "session.test.mjs": "8e56d8691882c30e417f06f525085f9d12fc833ca17cc4a849b33abda8ce48fe",
+    "supabase.mjs": "0ebc4cdbd77b2902efdf094defafc40eac916808529b9e69cb8dd743e25c9128",
+    "supabase.test.mjs": "c35bb8485e29a9f78c7d8b6fd0de4c33cb379d1fbcf9218582554649e36612ec",
+    "supabase/migrations/001_cloud_identity.sql": "ab6ca224fc02fa038bc74941a28d961817ad96abefc12cb8143d4615fec241ad",
+    "supabase/migrations/002_create_cloud_shop_rpc.sql": "42c6dd1118fc854468af3aeb8e68986fb979ee4fa72effcbb62f210795d12564",
+    "supabase/migrations/003_cloud_security_integrity.sql": "880eb578e0d9c5a52e2bc4bd01001fc2b92900be62c90efabf51063df34a69ee",
+    "supabase/migrations/004_cloud_management_api.sql": "b1cb7688fac8a314a71c6f78e5b37e998979048881aa36c3c5203a127365f4a1",
+    "supabase/rollback/003_cloud_security_integrity.sql": "f07d6855dcd28864e742e7950d8699f3934ec2803dd018be9c5e26333523016d",
+    "supabase/rollback/004_cloud_management_api.sql": "228650267b943bccef8d0aa54e512d11733e3a5d70d6382920c4dcf64b609d2a"
+  }
+}
