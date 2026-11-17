@@ -4,8 +4,8 @@ import { hashPassword, verifyPassword } from './password.mjs';
 export async function bootstrapSuperAdmin({ env = process.env, db = database } = {}) {
   const username = env.SUPER_ADMIN_USERNAME?.trim();
   const password = env.SUPER_ADMIN_PASSWORD;
-  if (!username || !password || password.length < 12 || password.length > 1024 || password !== password.trim()) {
-    throw new Error('Set SUPER_ADMIN_USERNAME and SUPER_ADMIN_PASSWORD (12–1024 characters, no surrounding whitespace)');
+  if (!username || !password || password.length < 1 || password.length > 1024 || password !== password.trim()) {
+    throw new Error('Set SUPER_ADMIN_USERNAME and SUPER_ADMIN_PASSWORD (1–1024 characters, no surrounding whitespace)');
   }
 
   const query = new URLSearchParams({

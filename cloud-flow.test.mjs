@@ -102,7 +102,7 @@ const shopPayload = (overrides = {}) => ({
   address: 'Test Address',
   phone: '000-0000',
   username: 'shop-owner',
-  password: 'shop-owner-test-password-123',
+  password: 'x',
   licenseExpiryDate: '2099-01-01T00:00:00.000Z',
   isLifetime: false,
   ...overrides,

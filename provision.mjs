@@ -6,8 +6,8 @@ export async function provisionCloudAccount({ env = process.env, db = database }
   const role = env.ACCOUNT_ROLE || 'admin';
   const username = env.ACCOUNT_USERNAME?.trim();
   const password = env.ACCOUNT_PASSWORD;
-  if (!['superAdmin', 'admin', 'employee'].includes(role) || !username || !password || password.length < 12 || password.length > 1024 || password !== password.trim()) {
-    throw new Error('Supply a username, password of 12–1024 characters with no surrounding whitespace, and a valid role');
+  if (!['superAdmin', 'admin', 'employee'].includes(role) || !username || !password || password.length < 1 || password.length > 1024 || password !== password.trim()) {
+    throw new Error('Supply a username, password of 1–1024 characters with no surrounding whitespace, and a valid role');
   }
   const shopId = role === 'superAdmin' ? '' : env.SHOP_ID?.trim();
   if (role !== 'superAdmin' && !shopId) throw new Error('SHOP_ID is required');

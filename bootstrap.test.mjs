@@ -37,6 +37,13 @@ test('bootstrap refuses to reactivate a disabled Super Admin', async () => {
   assert.equal(writes, 0);
 });
 
-test('startup rejects missing or weak admin credentials', async () => {
+test('startup rejects missing admin credentials', async () => {
   await assert.rejects(bootstrapSuperAdmin({ env: {} }), /SUPER_ADMIN/);
+});
+
+test('bootstrap accepts a one-character configured password without changing existing accounts', async () => {
+ let account;
+ const db=async(_table,_query,options)=>{if(options)account=JSON.parse(options.body);return account?[account]:[];};
+ await bootstrapSuperAdmin({env:{SUPER_ADMIN_USERNAME:'root',SUPER_ADMIN_PASSWORD:'x'},db});
+ assert.equal(await verifyPassword('x',account.password_hash),true);
 });

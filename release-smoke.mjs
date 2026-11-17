@@ -1,6 +1,7 @@
 // Release-only verification. Inert unless explicitly enabled for this release.
 if (process.env.PHARMACY_RUN_RELEASE_CHECK !== '1') process.exit(0);
 const {createHmac}=await import('node:crypto');
+const {setTimeout:delay}=await import('node:timers/promises');
 const base='https://qodra-pharmacy-api.onrender.com';
 if(process.env.SUPABASE_URL?.replace(/\/$/,'')!=='https://viaptmtfxfizysejrliy.supabase.co')throw Error('Release check refused: unexpected Supabase project');
 const releaseId=process.env.PHARMACY_RELEASE_CHECK_ID;
@@ -18,6 +19,11 @@ const adminLogin=()=>call('/api/login',{auth:null,body:{username:process.env.SUP
 const shopLogin=(id,username='release-owner',pass=password(id))=>call('/api/login',{auth:null,body:{shopId:id,username,password:pass}});
 const manage=(id,action,payload)=>call('/api/admin/shops/manage',{body:{shopId:id,action,payload}});
 try{
+ if (process.env.RENDER_GIT_COMMIT) {
+  let current=false;
+  for(let i=0;i<40;i++){try{const check=await call('/version',{auth:null});if(check.status===200&&check.data.build===process.env.RENDER_GIT_COMMIT){current=true;break;}}catch{}await delay(3000);}
+  if(!current)throw Error('Expected release commit did not become publicly active');
+ }
  const version=expect(await call('/version',{auth:null}),200,'public version');if(version.version!=='4')throw Error('Unexpected API version');
  expect(await call('/ready',{auth:null}),200,'public readiness');record('public_routes');
  const login=expect(await adminLogin(),200,'existing Super Admin login');if(login.role!=='superAdmin'||!login.accessToken)throw Error('Unexpected Super Admin session');token=login.accessToken;record('existing_super_admin_login');
@@ -39,16 +45,27 @@ try{
  if(!accounts.ok)throw Error('Supabase account verification failed');const accountRows=await accounts.json();if(accountRows.length!==1||accountRows[0].role!=='admin')throw Error('Unexpected Shop Admin association');record('supabase_account_association');
  expect(await shopLogin(shops[0]),200,'Shop Admin first client');expect(await shopLogin(shops[0]),200,'Shop Admin independent client');record('shop_admin_independent_clients');
  expect(await shopLogin(shops[0],'release-owner','incorrect-release-password'),401,'wrong password');expect(await shopLogin(shops[1],'release-owner',password(shops[0])),401,'cross-shop password');expect(await shopLogin('WRONG-'+shops[0]),401,'incorrect Shop ID');record('credential_and_shop_isolation');
+ const shortId=`RELEASE-${releaseId}-C`;
+ if(before.some(row=>row.shopId===shortId&&row.name!=='Pharmacy release verification (test only)'))throw Error('Short-password test ID collision');
+ const shortBody={...bodies[0],shopId:shortId,username:'release-short-owner',password:'x'};
+ expect(await call('/api/admin/shops',{body:shortBody,key:`pharmacy-${releaseId}-short`}),201,'one-character password provisioning');created.push(shortId);
+ const shortState=expect(await call('/api/admin/shops'),200,'short password test state').shops.find(row=>row.shopId===shortId);
+ if(shortState?.archived)expect(await manage(shortId,'restore',{confirmationShopId:shortId}),200,'short test restore');
+ expect(await manage(shortId,'update',{name:shortBody.name,address:shortBody.address,phone:'',username:'release-short-owner',password:'x'}),200,'one-character password reset');
+ expect(await shopLogin(shortId,'release-short-owner','x'),200,'one-character password login');
+ expect(await manage(shortId,'update',{name:shortBody.name,address:shortBody.address,phone:'',username:'release-short-owner',password:'y'}),200,'one-character password update');
+ expect(await shopLogin(shortId,'release-short-owner','x'),401,'previous short password rejected');expect(await shopLogin(shortId,'release-short-owner','y'),200,'updated short password login');record('one_character_password_creation_and_update');
+
  expect(await manage(shops[0],'status',{status:'suspended'}),200,'suspension');expect(await shopLogin(shops[0]),403,'suspended login');expect(await manage(shops[0],'status',{status:'active'}),200,'reactivation');expect(await shopLogin(shops[0]),200,'reactivated login');record('suspension_reactivation');
  expect(await manage(shops[0],'account',{active:false}),200,'disable account');expect(await shopLogin(shops[0]),401,'disabled account login');expect(await manage(shops[0],'account',{active:true}),200,'enable account');record('shop_admin_activity');
  expect(await manage(shops[0],'update',{name:bodies[0].name,address:bodies[0].address,phone:'',username:'release-updated',password:password(shops[0],'updated')}),200,'Shop Admin credentials update');expect(await shopLogin(shops[0]),401,'old credentials rejected');expect(await shopLogin(shops[0],'release-updated',password(shops[0],'updated')),200,'updated credentials login');
  expect(await manage(shops[0],'update',{name:bodies[0].name,address:bodies[0].address,phone:'',username:'release-owner',password:password(shops[0])}),200,'restore test credentials');record('shop_admin_credentials');
  const expired=await fetch(process.env.SUPABASE_URL+'/rest/v1/cloud_pharmacies?shop_id=eq.'+encodeURIComponent(shops[0]),{method:'PATCH',headers:{apikey:process.env.SUPABASE_SECRET_KEY,'Content-Type':'application/json'},body:JSON.stringify({is_lifetime:false,license_expiry_date:'2000-01-01T00:00:00Z'}),signal:AbortSignal.timeout(30000)});if(!expired.ok)throw Error('Designated test license setup failed');
  expect(await shopLogin(shops[0]),403,'expired license login');expect(await manage(shops[0],'license',{isLifetime:true,licenseExpiryDate:null}),200,'license renewal');expect(await shopLogin(shops[0]),200,'renewed license login');record('expiry_and_renewal');
- expect(await manage(shops[0],'archive',{confirmationShopId:shops[0]}),200,'archive');expect(await shopLogin(shops[0]),403,'archived login');expect(await manage(shops[0],'restore',{confirmationShopId:shops[0]}),200,'restore');record('safe_archive_restore');
+ expect(await manage(shops[0],'delete',{confirmationShopId:shops[0]}),200,'archive');expect(await shopLogin(shops[0]),403,'archived login');expect(await manage(shops[0],'restore',{confirmationShopId:shops[0]}),200,'restore');record('safe_delete_restore');
  for(const id of created)expect(await manage(id,'archive',{confirmationShopId:id}),200,'test cleanup archive');
  expect(await call('/api/logout',{body:{}}),200,'primary session logout');expect(await call('/api/admin/shops'),401,'primary revoked session');record('logout_and_cleanup');
- console.log('PHARMACY_RELEASE_CHECK_RESULT '+JSON.stringify({success:true,releaseId,apiBuild:version.build,passed,testShops:shops,cleanup:'archived; no hard deletion; no existing customer/financial records changed'}));
+ console.log('PHARMACY_RELEASE_CHECK_RESULT '+JSON.stringify({success:true,releaseId,apiBuild:version.build,passed,testShops:created,cleanup:'archived; no hard deletion; no existing customer/financial records changed'}));
 }catch(error){
  if(token)for(const id of created){try{await manage(id,'archive',{confirmationShopId:id});}catch{}}
  console.error('PHARMACY_RELEASE_CHECK_FAILED '+String(error.message).slice(0,180));process.exitCode=1;

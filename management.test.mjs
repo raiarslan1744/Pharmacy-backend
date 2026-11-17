@@ -26,7 +26,7 @@ async function fixture(t) {
 test('cloud list and every management action require a live Super Admin session',async t=>{
   const {state,request}=await fixture(t);
   assert.equal((await request('/api/admin/shops',undefined,null)).status,401);
-  for(const action of ['status','update','license','archive','restore','account']) assert.equal((await request('/api/admin/shops/manage',{shopId:'CLOUD',action,payload:{}},null)).status,401);
+  for(const action of ['status','update','license','archive','restore','account','delete']) assert.equal((await request('/api/admin/shops/manage',{shopId:'CLOUD',action,payload:{}},null)).status,401);
   state.active=false;assert.equal((await request('/api/admin/shops')).status,403);
   state.active=true;state.revoked=true;assert.equal((await request('/api/admin/shops/manage',{shopId:'CLOUD',action:'archive',payload:{confirmationShopId:'CLOUD'}})).status,401);
   assert.equal(state.calls.some(c=>c.table==='rpc/manage_cloud_shop'),false);
@@ -48,7 +48,7 @@ test('management binds authenticated actor, hashes passwords and ignores client 
 
 test('invalid management inputs do not call RPC and database failures remain failures',async t=>{
   const {state,request}=await fixture(t);
-  for(const [action,payload] of [['status',{}],['status',{status:'deleted'}],['account',{active:'false'}],['license',{isLifetime:false}],['update',{password:'short'}],['delete',{}]]) assert.equal((await request('/api/admin/shops/manage',{shopId:'CLOUD',action,payload})).status,400);
+  for(const [action,payload] of [['status',{}],['status',{status:'deleted'}],['account',{active:'false'}],['license',{isLifetime:false}],['update',{password:''}],['purge',{}]]) assert.equal((await request('/api/admin/shops/manage',{shopId:'CLOUD',action,payload})).status,400);
   assert.equal(state.calls.some(c=>c.table==='rpc/manage_cloud_shop'),false);
   state.fail=true;assert.equal((await request('/api/admin/shops')).status,503);
 });
@@ -59,4 +59,12 @@ test('cloud list traverses explicit pages rather than silently truncating shops'
  const response=await request('/api/admin/shops');assert.equal(response.status,200);
  assert.equal((await response.json()).shops.length,205);
  assert.equal(state.calls.filter(c=>c.table==='cloud_pharmacies').length,3);
+});
+
+test('one-character Shop Admin passwords are accepted and deletion only archives',async t=>{
+ const {state,request}=await fixture(t);
+ const updated=await request('/api/admin/shops/manage',{shopId:'CLOUD',action:'update',payload:{password:'x'}});
+ assert.equal(updated.status,200);assert.equal(await verifyPassword('x',state.lastArgs.p_payload.passwordHash),true);
+ const deleted=await request('/api/admin/shops/manage',{shopId:'CLOUD',action:'delete',payload:{confirmationShopId:'CLOUD'}});
+ assert.equal(deleted.status,200);assert.equal(state.lastArgs.p_action,'archive');assert.equal(state.lastArgs.p_shop_id,'CLOUD');
 });
