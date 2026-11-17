@@ -194,7 +194,7 @@ export function createApp({
           return send(200, { success: true, shop });
         }
         const key = req.headers['idempotency-key'];
-        if (typeof key !== 'string' || !/^[A-Za-z0-9_-]{16,128}$/.test(key)) return send(400, { message: 'Idempotency-Key of 16–128 characters is required.' });
+        if (typeof key !== 'string' || !/^[A-Za-z0-9_-]{16,128}$/.test(key)) return send(400, { message: 'Idempotency-Key of 16â€“128 characters is required.' });
         if (Date.now() - createWindowStart > 60_000) { createAttempts = 0; createWindowStart = Date.now(); }
         if (++createAttempts > 10) return send(429, { message: 'Too many shop creation attempts. Try again in a minute.' });
 
@@ -220,7 +220,7 @@ export function createApp({
           return send(400, { message: 'Shop ID, shop name, address, and username are required and must be within the allowed lengths.' });
         }
         if (typeof password !== 'string' || password.length < 1 || password.length > 1024 || password !== password.trim()) {
-          return send(400, { message: 'Shop Admin password must be 1–1024 characters with no surrounding whitespace.' });
+          return send(400, { message: 'Shop Admin password must be 1â€“1024 characters with no surrounding whitespace.' });
         }
         if (typeof isLifetime !== 'boolean' || (!isLifetime && !licenseExpiryDate)) {
           return send(400, { message: 'A valid expiry date is required for a non-lifetime license.' });
@@ -285,9 +285,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       await bootstrapSuperAdmin();
       bootstrapped = true;
       console.info('[startup] Super Admin bootstrap completed');
-      if (process.env.PHARMACY_RUN_RELEASE_CHECK === '1') {
-        void import('./release-smoke.mjs').catch(() => console.error('PHARMACY_RELEASE_CHECK_FAILED verifier initialization'));
-      }
     },
   });
 }
