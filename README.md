@@ -1,6 +1,6 @@
 # Cloud identity backend — version 4
 
-This document supersedes the earlier reports in `outputs`. Changes are local only.
+This document describes the version-4 backend. Deployment and release evidence is recorded in outputs/production_release_report.md; older local-readiness reports are historical.
 The existing public URL is `https://qodra-pharmacy-api.onrender.com` and is also the Flutter default. `BACKEND_URL` can override it. Never include backend secrets in Flutter.
 
 ## Requirements
@@ -41,3 +41,7 @@ Errors: 400 input/key conflict/state, 401 invalid/expired/revoked token, 403 una
 Shop Admin login is username + password + permanent Shop ID; it works from a second device once the backend and schema are deployed. Missing, invalid and expired non-lifetime licenses fail closed. Inventory, sales and finance remain device-local. Cloud login never falls back to SQLite. Explicit local mode retains SHA-256 local credentials and offline flows; hashes are not converted or uploaded.
 
 Run `npm test` in backend. Run `flutter test` and `flutter test --dart-define=LOCAL_AUTH=true` at project root; tests specific to the other mode explicitly skip. Run `flutter analyze`. For PGlite validation: `npm ci --prefix tools/validation`, then `node tools/validation/validate.mjs`. This uses PGlite's PostgreSQL engine, not a JavaScript database mock, but uses one connection and does not prove native multi-connection concurrency, Supabase role/exposure configuration, Render connectivity or production backfill. Native PostgreSQL validation is available via `node tools/validation/native.mjs`. It creates its own local-only PostgreSQL 17.6 cluster, takes no production connection settings, tests distinct server connections contending on an actual PostgreSQL lock, and stops the cluster in finally. Read `outputs/final_production_readiness_report.md` for current results, deployment order and rollback; it supersedes the previous handoff.
+
+## Release verification tool
+
+release-smoke.mjs is inert unless PHARMACY_RUN_RELEASE_CHECK=1 and a validated PHARMACY_RELEASE_CHECK_ID are explicitly supplied. It verifies only the confirmed Pharmacy service/project, uses existing server-side credentials without printing them, operates on designated release test shops, and archives those test shops. It is not part of the normal startup command. The release verification switch is disabled after testing.
